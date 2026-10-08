@@ -8,4 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add your own problems here
 add_executable(project main.cpp problems/sum.cpp
         problems/DFA_word_tester.cpp
-        problems/DFA_word_tester.h)
+        problems/DFA_word_tester.h
+        problems/Finite_Automaton_Determinizer.cpp
+        problems/Finite_Automaton_Determinizer.h)

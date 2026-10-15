@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include "problems/DFA_word_tester.h"
+#include "problems/Finite_Automaton_Determinizer.h"
 #include "problems/sum.hpp"
 
 int runProblem(int argc, char* argv[]) {
@@ -15,6 +16,7 @@ int runProblem(int argc, char* argv[]) {
     std::vector<Problem *> problems;
     problems.push_back(new SumProblem());
     problems.push_back(new DFA_word_tester());
+    problems.push_back(new Finite_Automaton_Determinizer());
 
     cxxopts::Options options("project", "Run the specific problem");
 

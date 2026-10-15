@@ -7,13 +7,14 @@
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <sstream>
 
 using namespace std;
 
 // Initialize the parser for the Determinizer problem
 void Finite_Automaton_Determinizer::initialize_parser(cxxopts::Options &options) {
     options.add_options()
-            ("det", "Tests the DFA.", cxxopts::value<std::string>());
+            ("det", "Tests the DFA.", cxxopts::value<bool>());
 }
 
 // Check if the Determinizer problem is chosen
@@ -21,7 +22,7 @@ bool Finite_Automaton_Determinizer::is_chosen_problem(const cxxopts::ParseResult
     return args.count("det") > 0;
 }
 
-vector<string> split(const string &s, char delimiter) {
+static vector<string> split(const string &s, char delimiter) {
     vector<string> tokens;
     stringstream ss(s);
     string token;
@@ -31,7 +32,7 @@ vector<string> split(const string &s, char delimiter) {
     return tokens;
 }
 
-set<string> split_set(const string &s, char delimiter) {
+static set<string> split_set(const string &s, char delimiter) {
     set<string> tokens;
     stringstream ss(s);
     string token;
@@ -65,10 +66,11 @@ int Finite_Automaton_Determinizer::run(const cxxopts::ParseResult &args) {
     auto endNodeNames = split_set(line, ' ');
 
     auto m = map<string, int>();
-    unordered_map<string, unordered_map<string, set<string>>> graph;
+    unordered_map<string, unordered_map<string, set<string> > > graph;
     while (getline(inputFile, line)) {
         vector<string> tokens = split(line, ' ');
-        if (tokens.size() == 3 && nodeNames.count(tokens[0]) == 1 && nodeNames.count(tokens[2]) == 1 && abcCharacters.count(tokens[1]) == 1) {
+        if (tokens.size() == 3 && nodeNames.count(tokens[0]) == 1 && nodeNames.count(tokens[2]) == 1 && abcCharacters.
+            count(tokens[1]) == 1) {
             graph[tokens[0]][tokens[1]].insert(tokens[2]);
         } else {
             cerr << "Error reading input file at the edge lines: " << inputFilename << endl;
@@ -82,30 +84,83 @@ int Finite_Automaton_Determinizer::run(const cxxopts::ParseResult &args) {
         return 1;
     }
 
-    map<set<string>, map<string, set<string>>> newAutomaton;
-    vector<set<string>> orderOfNewNodes;
+    map<set<string>, map<string, set<string> > > newAutomaton;
+    vector<set<string> > orderOfNewNodes;
+    map<set<string>, bool> isEndNode;
 
     orderOfNewNodes.push_back({startNodeName});
 
+    isEndNode[{startNodeName}] = endNodeNames.count(startNodeName) == 1;
+
+
     int actualNewNodeIndex = 0;
     while (actualNewNodeIndex < orderOfNewNodes.size()) {
-        for (const auto& actualHeader : orderOfNewNodes[actualNewNodeIndex]) {
-            for (const auto& character : abcCharacters) {
-                for (const auto& node : graph[actualHeader][character]) {
-                    newAutomaton[orderOfNewNodes[actualNewNodeIndex]][character].insert(node);
+        const set<string> current = orderOfNewNodes[actualNewNodeIndex];
+        map<string, set<string> > targets;
+        map<string, bool> targetHasEnd;
+
+        for (const auto &header: current) {
+            for (const auto &character: abcCharacters) {
+                for (const auto &node: graph[header][character]) {
+                    targets[character].insert(node);
                     if (endNodeNames.count(node) == 1) {
-//! pair kulcsú map C++ a gemini-ban. Az utolsó dolognál meg kellene nézni a választ.
+                        targetHasEnd[character] = true;
                     }
                 }
             }
         }
-        for (auto character : abcCharacters) {
-            if (find(orderOfNewNodes.begin(), orderOfNewNodes.end(), newAutomaton[orderOfNewNodes[actualNewNodeIndex]][character]) == orderOfNewNodes.end()) {
-                orderOfNewNodes.push_back(newAutomaton[orderOfNewNodes[actualNewNodeIndex]][character]);
-//!
+        for (const auto &character: abcCharacters) {
+            const auto &target = targets[character];
+            if (target.empty()) continue;
+            newAutomaton[current][character] = target;
+
+            if (isEndNode.count(target) == 0) {
+                isEndNode[target] = targetHasEnd[character];
+                orderOfNewNodes.push_back(target);
             }
         }
         actualNewNodeIndex++;
+    }
+
+
+    map<set<string>, int> idx;
+    for (int i = 0; i < orderOfNewNodes.size(); i++) idx[orderOfNewNodes[i]] = i;
+
+    // 1. sor: állapotok
+    for (int i = 0; i < orderOfNewNodes.size(); i++) {
+        if (i > 0) outputFile << " ";
+        outputFile << "s" << i;
+    }
+    outputFile << "\n";
+
+    // 2. sor: ábécé
+    bool first = true;
+    for (const auto &character: abcCharacters) {
+        if (!first) outputFile << " ";
+        outputFile << character;
+        first = false;
+    }
+    outputFile << "\n";
+
+    // 3. sor: kezdőállapot
+    outputFile << "s0\n";
+
+    // 4. sor: végállapotok
+    first = true;
+    for (int i = 0; i < orderOfNewNodes.size(); i++) {
+        if (isEndNode[orderOfNewNodes[i]]) {
+            if (!first) outputFile << " ";
+            outputFile << "s" << i;
+            first = false;
+        }
+    }
+    outputFile << "\n";
+
+    // átmenetek:
+    for (int i = 0; i < orderOfNewNodes.size(); i++) {
+        for (const auto& [character, target] : newAutomaton[orderOfNewNodes[i]]) {
+            outputFile << "s" << i << " " << character << " s" << idx[target] << "\n";
+        }
     }
     return 0;
 }

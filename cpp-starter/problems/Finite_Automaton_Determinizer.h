@@ -7,7 +7,7 @@
 
 #include "../problem.hpp"
 
-class Finite_Automaton_Determinizer {
+class Finite_Automaton_Determinizer : public Problem {
     void initialize_parser(cxxopts::Options &options) override;
     bool is_chosen_problem(const cxxopts::ParseResult &args) override;
     int run(const cxxopts::ParseResult &args) override;

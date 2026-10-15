@@ -62,21 +62,19 @@ int Finite_Automaton_Determinizer::run(const cxxopts::ParseResult &args) {
     auto startNodeName = line;
 
     getline(inputFile, line);
-    auto endNodeNames = split(line, ' ');
+    auto endNodeNames = split_set(line, ' ');
 
     auto m = map<string, int>();
-    auto graph = map<string, map<char, string> >();
+    unordered_map<string, unordered_map<string, set<string>>> graph;
     while (getline(inputFile, line)) {
         vector<string> tokens = split(line, ' ');
         if (tokens.size() == 3 && nodeNames.count(tokens[0]) == 1 && nodeNames.count(tokens[2]) == 1 && abcCharacters.count(tokens[1]) == 1) {
-            graph[tokens[0]][tokens[1][0]] = tokens[2];
+            graph[tokens[0]][tokens[1]].insert(tokens[2]);
         } else {
             cerr << "Error reading input file at the edge lines: " << inputFilename << endl;
             return 1;
         }
     }
-    auto wordsLine = args["det"].as<string>();
-    auto words = split(wordsLine, ',');
 
     ofstream outputFile(outputFilename);
     if (!outputFile) {
@@ -84,24 +82,30 @@ int Finite_Automaton_Determinizer::run(const cxxopts::ParseResult &args) {
         return 1;
     }
 
-    /*for (auto word : words) {
-        auto actualNodeName = startNodeName;
-        auto ok = true;
-        for (auto w : word) {
-            if (graph[actualNodeName].find(w) != graph[actualNodeName].end()) {
-                actualNodeName = graph[actualNodeName][w];
+    map<set<string>, map<string, set<string>>> newAutomaton;
+    vector<set<string>> orderOfNewNodes;
+
+    orderOfNewNodes.push_back({startNodeName});
+
+    int actualNewNodeIndex = 0;
+    while (actualNewNodeIndex < orderOfNewNodes.size()) {
+        for (const auto& actualHeader : orderOfNewNodes[actualNewNodeIndex]) {
+            for (const auto& character : abcCharacters) {
+                for (const auto& node : graph[actualHeader][character]) {
+                    newAutomaton[orderOfNewNodes[actualNewNodeIndex]][character].insert(node);
+                    if (endNodeNames.count(node) == 1) {
+//! pair kulcsú map C++ a gemini-ban. Az utolsó dolognál meg kellene nézni a választ.
+                    }
+                }
             }
-            else {
-                ok = false;
-                break;
+        }
+        for (auto character : abcCharacters) {
+            if (find(orderOfNewNodes.begin(), orderOfNewNodes.end(), newAutomaton[orderOfNewNodes[actualNewNodeIndex]][character]) == orderOfNewNodes.end()) {
+                orderOfNewNodes.push_back(newAutomaton[orderOfNewNodes[actualNewNodeIndex]][character]);
+//!
             }
         }
-        if (ok && find(endNodeNames.begin(),endNodeNames.end(),actualNodeName) != endNodeNames.end()) {
-            outputFile << "IGEN" << endl;
-        }
-        else {
-            outputFile << "NEM" << endl;
-        }
+        actualNewNodeIndex++;
     }
-    return 0;*/
+    return 0;
 }

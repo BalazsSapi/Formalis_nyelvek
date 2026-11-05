@@ -7,6 +7,7 @@
 // Add your own problems here
 #include <fstream>
 
+#include "problems/Automaton_Minimizer.h"
 #include "problems/DFA_word_tester.h"
 #include "problems/Finite_Automaton_Determinizer.h"
 #include "problems/sum.hpp"
@@ -17,6 +18,7 @@ int runProblem(int argc, char* argv[]) {
     problems.push_back(new SumProblem());
     problems.push_back(new DFA_word_tester());
     problems.push_back(new Finite_Automaton_Determinizer());
+    problems.push_back(new Automaton_Minimizer());
 
     cxxopts::Options options("project", "Run the specific problem");
 

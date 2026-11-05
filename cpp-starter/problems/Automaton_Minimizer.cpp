@@ -9,15 +9,15 @@
 
 using namespace std;
 
-// Initialize the parser for the Determinizer problem
+// Initialize the parser for the Minimizer problem
 void Automaton_Minimizer::initialize_parser(cxxopts::Options &options) {
     options.add_options()
-            ("det", "Tests the DFA.", cxxopts::value<bool>());
+            ("mini", "Tests the Minimalization.", cxxopts::value<bool>());
 }
 
-// Check if the Determinizer problem is chosen
+// Check if the Minimizer problem is chosen
 bool Automaton_Minimizer::is_chosen_problem(const cxxopts::ParseResult &args) {
-    return args.count("det") > 0;
+    return args.count("mini") > 0;
 }
 
 static vector<string> split(const string &s, char delimiter) {
@@ -63,8 +63,13 @@ int Automaton_Minimizer::run(const cxxopts::ParseResult &args) {
     getline(inputFile, line);
     auto endNodeNames = split_set(line, ' ');
 
-    unordered_map<string, unordered_map<string, bool> > starNodePairs;
+    map<string, map<string, bool> > starNodePairs;
+    int idx = 0;
+    map<string, int> indexOf;
+    vector<string> names;
     for (auto it1 = nodeNames.begin(); it1 != nodeNames.end(); it1++) {
+        indexOf[*it1] = idx++;
+        names.push_back(*it1);
         for (auto it2 = next(it1); it2 != nodeNames.end(); it2++) {
             starNodePairs[*it1][*it2] = (endNodeNames.count(*it1) != endNodeNames.count(*it2));
         }
@@ -87,22 +92,28 @@ int Automaton_Minimizer::run(const cxxopts::ParseResult &args) {
     do {
         change = false;
         united = vector<int>(nodeNames.size(), -1);
-        for (auto &firstNode: starNodePairs) {
-            for (auto &secondNode: firstNode.second) {
-                if (secondNode.second == true) {
+        for (auto &row: starNodePairs) {
+            for (auto &cell: row.second) {
+                if (cell.second == true) {
                     continue;
                 }
                 for (auto c: abcCharacters) {
-                    if (starNodePairs[graph[firstNode.first][c]][graph[secondNode.first][c]] == true) {
-                        secondNode.second = true;
-                        change = true;
-                        break;
+                    if (graph[row.first][c] < graph[cell.first][c]) {
+                        if (starNodePairs[graph[row.first][c]][graph[cell.first][c]] == true) {
+                            cell.second = true;
+                            change = true;
+                            break;
+                        }
+                    } else if (graph[row.first][c] > graph[cell.first][c]) {
+                        if (starNodePairs[graph[cell.first][c]][graph[row.first][c]] == true) {
+                            cell.second = true;
+                            change = true;
+                            break;
+                        }
                     }
                 }
-                if (united[distance(nodeNames.begin(), find(nodeNames.begin(), nodeNames.end(), secondNode.first))] == -
-                    1) {
-                    united[distance(nodeNames.begin(), find(nodeNames.begin(), nodeNames.end(), secondNode.first))] =
-                            distance(nodeNames.begin(), find(nodeNames.begin(), nodeNames.end(), firstNode.first));
+                if (united[indexOf[cell.first]] == -1) {
+                    united[indexOf[cell.first]] = indexOf[row.first];
                 }
             }
         }
@@ -115,6 +126,45 @@ int Automaton_Minimizer::run(const cxxopts::ParseResult &args) {
         return 1;
     }
 
+    for (int i = 0; i < nodeNames.size(); i++) {
+        if (united[i] == -1) {
+            outputFile << "s" << i << " ";
+        }
+    }
+    outputFile << "\n";
 
+    for (const auto &c: abcCharacters) {
+        outputFile << c << " ";
+    }
+    outputFile << "\n";
+
+    if (united[indexOf[startNodeName]] == -1) {
+        outputFile << "s" << indexOf[startNodeName] << "\n";
+    } else {
+        outputFile << "s" << united[indexOf[startNodeName]] << "\n";
+    }
+
+
+    for (int i = 0; i < nodeNames.size(); i++) {
+        if (united[i] == -1 && endNodeNames.count(names[i]) == 1) {
+            outputFile << "s" << i << " ";
+        }
+    }
+    outputFile << "\n";
+
+    // Transitions: only from representatives, so there are no duplicates
+    for (int i = 0; i < nodeNames.size(); i++) {
+        if (united[i] == -1) {
+            for (const auto &c: abcCharacters) {
+                outputFile << "s" << i << " " << c << " ";
+                if (united[indexOf[graph[names[i]][c]]] == -1) {
+                    outputFile << "s" << indexOf[graph[names[i]][c]] << "\n";
+                }
+                else {
+                    outputFile << "s" << united[indexOf[graph[names[i]][c]]] << "\n";
+                }
+            }
+        }
+    }
     return 0;
 }

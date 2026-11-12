@@ -38,9 +38,9 @@ static void task1(const vector<string> &lines, ostream &out) {
         regex(R"(^[0-9-]+ 10:18:51\.[0-9]+ +221 )"),
         regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ E )"), // errors
         regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ W PackageManager:)"),
-        regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ D ExoPlayer[^:]*:)"),
+        regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ D .*ExoPlayer[^:]*:)"),
         regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [EW] .*\.java:)"),
-        regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [IDVEFAW] [^:]*: .*\bThread\b)"),
+        regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [IDVEFAW] [^:]*: .*Thread)"),
     };
 
     vector<int> counts(patterns.size(), 0);

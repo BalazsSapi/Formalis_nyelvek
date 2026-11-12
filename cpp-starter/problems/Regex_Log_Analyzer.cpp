@@ -40,7 +40,7 @@ static void task1(const vector<string> &lines, ostream &out) {
         regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ W PackageManager:)"),
         regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ D ExoPlayer[^:]*:)"),
         regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [EW] .*\.java:)"),
-        regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [IDVEFAW] [^:]*: .*Thread)"),
+        regex(R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [IDVEFAW] [^:]*: .*\bThread\b)"),
     };
 
     vector<int> counts(patterns.size(), 0);

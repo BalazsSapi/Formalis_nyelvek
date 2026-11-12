@@ -10,6 +10,7 @@
 #include "problems/Automaton_Minimizer.h"
 #include "problems/DFA_word_tester.h"
 #include "problems/Finite_Automaton_Determinizer.h"
+#include "problems/Regex_Log_Analyzer.h"
 #include "problems/sum.hpp"
 
 int runProblem(int argc, char* argv[]) {
@@ -19,6 +20,7 @@ int runProblem(int argc, char* argv[]) {
     problems.push_back(new DFA_word_tester());
     problems.push_back(new Finite_Automaton_Determinizer());
     problems.push_back(new Automaton_Minimizer());
+    problems.push_back(new Regex_Log_Analyzer());
 
     cxxopts::Options options("project", "Run the specific problem");
 

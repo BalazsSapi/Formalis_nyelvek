@@ -12,4 +12,6 @@ add_executable(project main.cpp problems/sum.cpp
         problems/Finite_Automaton_Determinizer.cpp
         problems/Finite_Automaton_Determinizer.h
         problems/Automaton_Minimizer.cpp
-        problems/Automaton_Minimizer.h)
+        problems/Automaton_Minimizer.h
+        problems/Regex_Log_Analyzer.cpp
+        problems/Regex_Log_Analyzer.h)
